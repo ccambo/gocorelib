@@ -1,3 +1,3 @@
-module github.com/ccambo/gocorlib
+module github.com/ccambo/gocorelib
 
 go 1.17
