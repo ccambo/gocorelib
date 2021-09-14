@@ -12,7 +12,11 @@ import (
 )
 
 // ===== [ Constants and Variables ] =====
-const ()
+const (
+	XForwardedFor = "X-Forwarded-For"
+	XRealIP       = "X-Real-IP"
+	XClientIP     = "x-client-ip"
+)
 
 var ()
 
@@ -31,12 +35,12 @@ func IsValidPort(port int) bool {
 // 오류 발생 시는 RemoteAddr 그대로 반환
 func GetRequestIP(req *http.Request) string {
 	// Header - Real IP 값 검증
-	if addr := strings.Trim(req.Header.Get("X-Real-Ip"), ""); addr != "" {
+	if addr := strings.Trim(req.Header.Get(XRealIP), ""); addr != "" {
 		return addr
 	}
 
 	// Header - Forwarded IP 값 검증
-	if addr := strings.Trim(req.Header.Get("X-Forwarded-For"), ""); addr != "" {
+	if addr := strings.Trim(req.Header.Get(XForwardedFor), ""); addr != "" {
 		return addr
 	}
 
@@ -47,4 +51,25 @@ func GetRequestIP(req *http.Request) string {
 	}
 
 	return addr
+}
+
+// RemoteIp - 지정한 HTTP Request에서 Remote IP 정보 추출
+func RemoteIp(req *http.Request) string {
+	remoteAddr := req.RemoteAddr
+
+	if ip := req.Header.Get("XClientIP"); ip != "" {
+		remoteAddr = ip
+	} else if ip := req.Header.Get(XRealIP); ip != "" {
+		remoteAddr = ip
+	} else if ip := req.Header.Get(XForwardedFor); ip != "" {
+		remoteAddr = ip
+	} else {
+		remoteAddr, _, _ = net.SplitHostPort(remoteAddr)
+	}
+
+	if remoteAddr == "::1" {
+		remoteAddr = "127.0.0.1"
+	}
+
+	return remoteAddr
 }
